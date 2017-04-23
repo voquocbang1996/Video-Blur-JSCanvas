@@ -1,0 +1,72 @@
+<HTML>
+<head>
+</head>
+<body>
+	<video id="video" autoplay hidden muted>
+		<source src="video.mp4" type="video/mp4">
+		Your browser does not support HTML5 video.
+	</video>
+	<canvas id="canvas"></canvas>
+	<br>
+	<br>
+	<canvas id="canvas2"></canvas>
+	<script>
+		var canvas = document.getElementById('canvas');
+		var canvas2 = document.getElementById('canvas2');
+		var ctx = canvas.getContext('2d');
+		var ctx2 = canvas2.getContext('2d');
+		var video = document.getElementById('video');
+		// set canvas size = video size when known
+		video.addEventListener('loadedmetadata', function() 
+		{
+				
+ 			canvas.width = this.videoWidth;
+			canvas.height = this.videoHeight;
+			canvas2.width = this.videoWidth;
+			canvas2.height = this.videoHeight;
+		}
+		);
+	
+		video.addEventListener('play', function() 
+		{
+ 			var $this = this; //cache
+			var loop = function()
+			{
+    				if (!$this.paused && !$this.ended) 
+				{	
+      					ctx.drawImage($this, 0, 0);
+					ctx2.drawImage($this, 0, 0);
+					var imageData = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
+					var data = imageData.data;
+					var kernel = [1,2,1,2,4,2,1,2,1]
+					
+					for (var i = 4; i < data.length / 4 - 4; i += 1)
+					{
+						var red = 0;
+						var green = 0;
+						var blue = 0;
+						for (var j = 0; j < 9; j += 1)
+						{
+							red += data[(i - 4 + j) * 4] * kernel[j];
+							green += data[(i - 4 + j) * 4 + 1] * kernel[j];
+							blue += data[(i - 4 + j) * 4 + 2] * kernel[j];
+						}	
+						red = red / 16;
+						blue = blue / 16;
+						green = green / 16;	
+						data[i * 4] = red;
+						data[i * 4 + 1] = green;
+						data[i * 4 + 2] = blue;
+					}		
+							
+					ctx2.putImageData(imageData, 0, 0);
+      					setTimeout(loop, 1); // drawing at 30fps
+    				}
+  			}
+			loop();
+			
+		}, 0);
+	</script>
+	
+</body>
+</HTML>
